@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Robot das Bolhas 🫧</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>🤖 Robot das Bolhas 🫧</h1>
+  <p>Move-te com as <strong>setas</strong> · <strong>ESPAÇO</strong> dispara bolhas · Apanha 🍪 · Foge de 💣</p>
+  <div id="hud">
+    <span id="score">Pontos: 0</span>
+    <span id="lives">Vidas: ❤️❤️❤️</span>
+  </div>
+  <div id="game">
+    <div id="robot">🤖</div>
+  </div>
+  <div id="gameover" class="hidden">
+    <h2>Game Over!</h2>
+    <p>Fizeste <span id="finalScore">0</span> pontos</p>
+    <button onclick="location.reload()">Jogar de novo</button>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
