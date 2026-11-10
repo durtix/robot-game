@@ -13,31 +13,17 @@ let score = 0;
 let lives = 3;
 let running = true;
 
-// --- Movimento e disparo ---
-document.addEventListener('keydown', (e) => {
+// --- Funções de movimento e disparo ---
+function moveRobot(dx, dy) {
   if (!running) return;
-
-  if (e.key === 'ArrowUp')    y -= speed;
-  if (e.key === 'ArrowDown')  y += speed;
-  if (e.key === 'ArrowLeft')  x -= speed;
-  if (e.key === 'ArrowRight') x += speed;
-
-  x = Math.max(0, Math.min(game.clientWidth  - robotSize, x));
-  y = Math.max(0, Math.min(game.clientHeight - robotSize, y));
-
+  x = Math.max(0, Math.min(game.clientWidth  - robotSize, x + dx));
+  y = Math.max(0, Math.min(game.clientHeight - robotSize, y + dy));
   robot.style.left = x + 'px';
   robot.style.top  = y + 'px';
-
-  if (e.code === 'Space') {
-    e.preventDefault();
-    shootBubble();
-  }
-});
-
-// --- Bolha que sobe ---
-const bolhas = [];
+}
 
 function shootBubble() {
+  if (!running) return;
   const bolha = document.createElement('div');
   bolha.className = 'bolha';
   bolha.textContent = '🫧';
@@ -51,7 +37,29 @@ function shootBubble() {
   bolhas.push(obj);
 }
 
-// Atualiza as bolhas a cada 30ms
+// --- Teclado (PC) ---
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowUp')    moveRobot(0, -speed);
+  if (e.key === 'ArrowDown')  moveRobot(0, speed);
+  if (e.key === 'ArrowLeft')  moveRobot(-speed, 0);
+  if (e.key === 'ArrowRight') moveRobot(speed, 0);
+  if (e.code === 'Space') { e.preventDefault(); shootBubble(); }
+});
+
+// --- Botões (Telemóvel) ---
+document.getElementById('btn-up').addEventListener('click', () => moveRobot(0, -speed));
+document.getElementById('btn-down').addEventListener('click', () => moveRobot(0, speed));
+document.getElementById('btn-left').addEventListener('click', () => moveRobot(-speed, 0));
+document.getElementById('btn-right').addEventListener('click', () => moveRobot(speed, 0));
+document.getElementById('btn-shoot').addEventListener('click', shootBubble);
+
+// Evita que o telemóvel faça zoom ou scroll ao premir os botões
+document.querySelectorAll('.btn').forEach(btn => {
+  btn.addEventListener('touchstart', (e) => { e.preventDefault(); btn.click(); }, {passive: false});
+});
+
+// --- Lógica das Bolhas ---
+const bolhas = [];
 setInterval(() => {
   if (!running) return;
   for (let i = bolhas.length - 1; i >= 0; i--) {
@@ -59,17 +67,12 @@ setInterval(() => {
     if (!b.alive) continue;
     b.y -= 8;
     b.el.style.top = b.y + 'px';
-
-    if (b.y < -30) {
-      b.el.remove();
-      bolhas.splice(i, 1);
-    }
+    if (b.y < -30) { b.el.remove(); bolhas.splice(i, 1); }
   }
 }, 30);
 
-// --- Objetos que caem (bolachas e bombas) ---
+// --- Lógica das Bolachas e Bombas ---
 const items = [];
-
 function spawnItem(tipo) {
   const el = document.createElement('div');
   el.className = tipo;
@@ -78,92 +81,51 @@ function spawnItem(tipo) {
   el.style.left = startX + 'px';
   el.style.top = '-30px';
   game.appendChild(el);
-
   items.push({ el, x: startX, y: -30, tipo });
 }
 
-// Queda dos objetos + colisões
 setInterval(() => {
   if (!running) return;
-
   for (let i = items.length - 1; i >= 0; i--) {
     const it = items[i];
     it.y += 3;
     it.el.style.top = it.y + 'px';
 
-    // Colisão com robot
-    const colideRobot =
-      it.x < x + robotSize &&
-      it.x + 30 > x &&
-      it.y < y + robotSize &&
-      it.y + 30 > y;
-
+    // Colisão com o robot
+    const colideRobot = it.x < x + robotSize && it.x + 30 > x && it.y < y + robotSize && it.y + 30 > y;
     if (colideRobot) {
       if (it.tipo === 'bolacha') {
-        score++;
-        scoreEl.textContent = 'Pontos: ' + score;
+        score++; scoreEl.textContent = 'Pontos: ' + score;
       } else {
-        // bomba tocou no robot
-        lives--;
-        atualizaVidas();
+        lives--; atualizaVidas();
         if (lives <= 0) gameOver();
       }
-      it.el.remove();
-      items.splice(i, 1);
-      continue;
+      it.el.remove(); items.splice(i, 1); continue;
     }
 
-    // Colisão com bolhas (só bombas)
+    // Colisão com as bolhas
     if (it.tipo === 'bomba') {
       for (let j = bolhas.length - 1; j >= 0; j--) {
         const b = bolhas[j];
         if (!b.alive) continue;
-        const colide =
-          it.x < b.x + 30 &&
-          it.x + 30 > b.x &&
-          it.y < b.y + 30 &&
-          it.y + 30 > b.y;
-        if (colide) {
+        if (it.x < b.x + 30 && it.x + 30 > b.x && it.y < b.y + 30 && it.y + 30 > b.y) {
           it.el.classList.add('explode');
-          const elRef = it.el;
-          setTimeout(() => elRef.remove(), 300);
-          items.splice(i, 1);
-          b.el.remove();
-          bolhas.splice(j, 1);
-          score += 2; // bónus por destruir bomba
-          scoreEl.textContent = 'Pontos: ' + score;
+          const elRef = it.el; setTimeout(() => elRef.remove(), 300);
+          items.splice(i, 1); b.el.remove(); bolhas.splice(j, 1);
+          score += 2; scoreEl.textContent = 'Pontos: ' + score;
           break;
         }
       }
       continue;
     }
-
-    // Saiu do fundo
-    if (it.y > game.clientHeight) {
-      it.el.remove();
-      items.splice(i, 1);
-    }
+    if (it.y > game.clientHeight) { it.el.remove(); items.splice(i, 1); }
   }
 }, 30);
 
-// --- Geração de objetos ---
-setInterval(() => {
-  if (!running) return;
-  spawnItem('bolacha');
-}, 1200);
+// Gerar objetos
+setInterval(() => { if (running) spawnItem('bolacha'); }, 1200);
+setInterval(() => { if (running) spawnItem('bomba'); }, 1800);
 
-setInterval(() => {
-  if (!running) return;
-  spawnItem('bomba');
-}, 1800);
-
-// --- Vidas / Game Over ---
-function atualizaVidas() {
-  livesEl.textContent = 'Vidas: ' + '❤️'.repeat(lives);
-}
-
-function gameOver() {
-  running = false;
-  finalScoreEl.textContent = score;
-  gameoverEl.classList.remove('hidden');
-}
+// Vidas e Game Over
+function atualizaVidas() { livesEl.textContent = 'Vidas: ' + '❤️'.repeat(lives); }
+function gameOver() { running = false; finalScoreEl.textContent = score; gameoverEl.classList.remove('hidden'); }

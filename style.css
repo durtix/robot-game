@@ -4,24 +4,27 @@ body {
   background: #1e1e2f;
   color: #fff;
   margin: 0;
-  padding: 15px;
+  padding: 10px;
+  touch-action: manipulation; /* Impede o zoom no telemóvel ao clicar rápido */
 }
 
-h1 { margin: 5px 0; }
-p { color: #aaa; margin: 5px 0 10px; }
+h1 { margin: 5px 0; font-size: 24px; }
+.instrucoes { color: #aaa; margin: 5px 0 10px; font-size: 14px; }
 
 #hud {
   display: flex;
   justify-content: space-between;
-  width: 600px;
+  width: 100%;
+  max-width: 600px;
   margin: 0 auto 10px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   color: #0f0;
 }
 
 #game {
-  width: 600px;
+  width: 100%;
+  max-width: 600px;
   height: 400px;
   background: #111;
   border: 3px solid #0f0;
@@ -54,25 +57,53 @@ p { color: #aaa; margin: 5px 0 10px; }
   to { transform: scale(2); opacity: 0; }
 }
 
-#gameover {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+/* --- ESTILO DOS BOTÕES (Telemóvel) --- */
+#controls {
+  display: none; /* Escondido no PC */
+  justify-content: space-between;
   align-items: center;
-  z-index: 10;
+  max-width: 600px;
+  margin: 15px auto 0;
+  padding: 0 10px;
 }
 
-#gameover.hidden { display: none; }
+.dpad { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.row { display: flex; gap: 5px; }
 
-#gameover button {
-  padding: 10px 20px;
-  font-size: 16px;
-  background: #0f0;
-  border: none;
-  border-radius: 6px;
+.btn {
+  background: #333;
+  color: white;
+  border: 2px solid #0f0;
+  border-radius: 10px;
+  font-size: 20px;
+  padding: 10px 15px;
   cursor: pointer;
-  font-weight: bold;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.btn:active { background: #0f0; color: #111; }
+.btn.shoot {
+  font-size: 18px;
+  padding: 20px 25px;
+  border-radius: 50%;
+  background: #0a5;
+  border-color: #0f0;
+}
+
+/* Mostrar os botões apenas em ecrãs pequenos */
+@media (max-width: 768px) {
+  #controls { display: flex; }
+  #game { height: 350px; }
+}
+
+/* --- ECRÃ DE GAME OVER --- */
+#gameover {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  display: flex; flex-direction: column; justify-content: center;
+  align-items: center; z-index: 10;
+}
+#gameover.hidden { display: none; }
+#gameover button {
+  padding: 10px 20px; font-size: 16px; background: #0f0;
+  border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
 }
